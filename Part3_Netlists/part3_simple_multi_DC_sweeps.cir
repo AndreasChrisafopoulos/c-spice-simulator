@@ -1,0 +1,41 @@
+* SPICE netlist of Part1-Parser.pdf
+
+V1 5 0 2
+V2 3 2 0.2
+V3 7 6 2
+I1 4 8 1e-3
+I2 0 6 1e-3
+R1 1 5 1.5
+R2 1 2 1
+R3 5 2 50
+R4 5 6 0.1
+R5 2 6 1.5
+R6 3 4 0.1
+R7 8 0 1e3
+R8 4 0 10
+
+*.OPTIONs  itol=0.001 iter
+.DC V1 0 3 0.01
+.PLOT V(4) V(3)
+.options sparse
+.DC V2 1 2 0.1
+.PLOT V(3)
+.PLOT V(4)
+
+.DC I1 1 2 0.1
+.PLOT V(3) 
+.PLOT V(4)
+
+.control
+ * op
+ * print all > dc_op_ngspice.txt
+ * dc v1 0 3 0.01
+ *wrdata dc_sweep_v1_v(4)_ngspice.txt v(4)
+ *wrdata dc_sweep_v1_v(3)_ngspice.txt v(3)
+ * dc v2 1 2 0.1
+ *wrdata dc_sweep_v2_v(4)_ngspice.txt v(4)
+ *wrdata dc_sweep_v2_v(3)_ngspice.txt v(3)
+ *dc i1 1 2 0.1
+ *wrdata dc_sweep_i1_v(4)_ngspice.txt v(4)
+ * wrdata dc_sweep_i1_v(3)_ngspice.txt v(3)
+.endc

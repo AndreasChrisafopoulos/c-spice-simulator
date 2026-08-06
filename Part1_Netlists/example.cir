@@ -1,0 +1,11 @@
+* SPD example: simple resistive chain with current sources
+R1  1 0  1      ; R between node1 and GND, R=1 ohm
+R2  2 0  1      ; R between node2 and GND, R=1 ohm
+R3  3 0  1      ; R between node3 and GND, R=1 ohm
+R12 1 2  1      ; R between node1 and node2, R=1 ohm
+R23 2 3  1      ; R between node2 and node3, R=1 ohm
+
+I1  1 0  1      ; current source injecting 1 A into node1 (to ground)
+I2  2 0  0.5    ; current source injecting 0.5 A into node2
+     .options   Spd  
+.end

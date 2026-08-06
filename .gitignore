@@ -1,0 +1,17 @@
+# Object files
+build/*.o
+*.o
+
+# Output files
+OUT/**/*.txt
+OUT/**/*.png
+OUT/**/*.plt
+
+# Executables
+*.exe
+*.out
+c_spice_sim
+
+# IDE / Editor
+.vscode/
+.idea/

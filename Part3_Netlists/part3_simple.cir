@@ -1,0 +1,40 @@
+* SPICE netlist of Part1-Parser.pdf
+
+V1 5 0 2
+*V2 3 2 0.2
+*V3 7 6 2
+*I1 4 8 1e-3
+*I2 0 6 1e-3
+R1 1 5 1.5
+R2 1 2 1
+R3 5 2 50
+R4 5 6 0.1
+R5 2 6 1.5
+r6 3 4 0.1
+R7 8 0 1e3
+R8 4 0 10
+c9 2 0 3
+C79 7 0 11
+L10 5 3 2
+*V1 5 0 2 EXP (2 5 1 0.2 2 0.5)
+V2 3 2 0.2 PULSE (0.2 1 1 0.1 0.4 0.5 2)
+V3 7 6 2
+I1 4 8 1e-3 SIN (1e-3 0.5 5 1 1 30)
+I2 0 6 1e-3 PWL(0 1e-3) (1.2 0.1) (1.4 1) (2 0.2) (3 0.4)
+
+
+.tran 0.1 3
+.plot V(1) V(5) V(2) V(3) V(4) V(6) V(7) V(8)
+*.options spd sprse
+*.DC V1 0 3 0.01
+*.PLOT V(4)
+.options    sparse iter
+*.control
+*run
+  *op
+  * print all > dc_op_ngspice.txt
+  *dc v1 0 3 0.01
+  *wrdata dc_sweep_v1_v(4)_ngspice.txt v(4)
+  *plot V(1) V(5) V(2) V(3) V(4) V(6) V(7) V(8)
+.endc
+.end

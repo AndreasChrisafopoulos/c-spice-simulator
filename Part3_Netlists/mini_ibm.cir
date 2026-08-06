@@ -1,0 +1,28 @@
+* Mini extracted-like netlist (toy example)
+
+* Voltage source with series parasitic inductance
+v1f _Y_n2_100_200 0 1.8
+l1f _Y_n2_100_200 _X_n2_100_200 1e-9
+
+* Resistive interconnect
+rrb0 n2_150_300 _X_n2_150_300 2.5e-1
+
+* Capacitive load
+c1 _X_n2_150_300 0 1.2e-10
+
+* Pulse current source (similar to iB33_x_v)
+iB0_v n1_400_500 0 2.2e-5 pulse(2.2e-5 0.05 2e-10 1e-10 1e-10 1e-11 3e-09 )
+
+* Series RC parasitic of current source
+riB0_v n1_400_500 _Z_n1_400_500 4.11
+ciB0_v _Z_n1_400_500 0 1.21e-10
+
+* Ground-referenced current source (g-type)
+iB0_g 0 n0_450_550 2.2e-5 pulse(2.2e-5 0.05 0 1e-10 1e-10
++ 1e-11 3e-09 )
+
+* Parasitic RC of g-source
+riB0_g 0 _Z_n0_450_550 4.11
+ciB0_g _Z_n0_450_550 n0_450_550 1.21e-10
+
+.end
