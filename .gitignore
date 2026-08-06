@@ -11,6 +11,7 @@ OUT/**/*.plt
 *.exe
 *.out
 c_spice_sim
+project
 
 # IDE / Editor
 .vscode/
