@@ -126,7 +126,7 @@ Every run writes results under `OUT/<netlist_name>_outputfiles0/` (direct solver
 
 ## Validating Results
 
-`cmpr/compare_results.py` compares simulator output against a reference solution and reports mean absolute/relative error and pass rate. See [`cmpr/README.txt`](./cmpr/README.txt) for usage. Reference solutions for the IBM power-grid benchmarks are in `IBM_SOLS/`.
+`cmpr/compare_results.py` compares simulator output against a reference solution and reports mean absolute/relative error and pass rate. See [`cmpr/README.md`](./cmpr/README.txt) for usage. Reference solutions for the IBM power-grid benchmarks are in `IBM_SOLS/`.
 
 ## Repository Layout
 
