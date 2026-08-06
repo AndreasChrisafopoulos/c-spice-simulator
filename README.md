@@ -1,6 +1,6 @@
 # C SPICE Simulator
 
-## Introduction
+## Overview
 This project implements a SPICE-like circuit simulator written entirely in C. It is designed to parse standard netlist files and perform core circuit simulations, emphasizing algorithmic implementation from scratch, including both direct and iterative matrix solvers.
 
 ## Features
@@ -10,66 +10,44 @@ This project implements a SPICE-like circuit simulator written entirely in C. It
 *   **Sparse Matrix Support:** Optimized memory and computation for large-scale node networks.
 *   **Output Generation:** Generates segregated output data for easy plotting and direct vs. iterative solver comparisons.
 
-## Supported Analyses & Components
-*   **Analyses:** DC Operating Point (`.op`), DC Sweep (`.dc`), Transient Analysis (`.tran`).
-*   **Components:** Resistors, Capacitors, Inductors, Diodes, BJTs, MOS Transistors.
-*   **Sources:** Independent Voltage and Current Sources (DC and Transient specs: EXP, SIN, PULSE, PWL).
+## Supported Circuit Elements
+*   **Passive:** Resistor (`R`), Capacitor (`C`), Inductor (`L`)
+*   **Active:** Diode (`D`), BJT Transistor (`Q`), MOS Transistor (`M`)
+*   **Sources:** Independent Voltage (`V`) and Current (`I`) Sources (DC and Transient specs: EXP, SIN, PULSE, PWL)
 
-*For a complete and detailed breakdown of syntax and component limitations, please see [NETLIST.md](NETLIST.md).*
+## Supported Analyses
+*   **DC Operating Point** (`.op`)
+*   **DC Sweep** (`.dc`): Up to 32 parallel sweep analyses per netlist.
+*   **Transient Analysis** (`.tran`)
+
+## Numerical Methods
+*   **LU Factorization**
+*   **Cholesky Decomposition**
+*   **BiCG (BiConjugate Gradient)**
+*   **CG (Conjugate Gradient)**
+*   **Sparse LU** (Enabled via `.options sparse`)
 
 ## Project Architecture
 
-    [Netlist File (.cir / .spice)]
-                 │
-                 ▼
-            [ Parser ]  <── Checks syntax, creates data structures
-                 │
-                 ▼
-  [ Modified Nodal Analysis ]
-                 │
-                 ▼
-         [ Matrix Assembly ]
-                 │
-    ┌────────────┼────────────┐
-    ▼            ▼            ▼
- [Direct]   [Iterative]  [Sparse] <── Solvers
-    │            │            │
-    └────────────┼────────────┘
-                 ▼
-       [ Transient Analysis ] <── Time Integration (TR/BE)
-                 │
-                 ▼
-          [ Output Files ]
-
-## Build Instructions
-
-Compile the project using:
-
-    make
-
-## Running the Simulator
-
-Run the simulator with two arguments:
-
-    ./project <netlist_folder_id> <netlist_file>
-
-**Example:**
-
-    ./project 3 part3_simple.cir
-
-**Folder ID Mapping:**
-*   `1` → Part 1 netlists
-*   `3` → Part 3 netlists
-*   `6` → Part 6 netlists
-
-## Output Files
-
-All simulation results are written under the `OUT/` directory. For each executed netlist, two output folders are created:
-
-*   `outputfiles0/` : Results produced using **direct solvers**.
-*   `outputfiles1/` : Results produced using **iterative solvers** (enabled via the `.options iter` directive).
-
-This separation allows easy comparison between direct and iterative solution methods.
-
-## Academic Context
-This project was developed to explore Electronic Design Automation (EDA) algorithms, focusing on the numerical methods (LU, Cholesky, BiCG, CG) required to reliably solve large, non-linear systems.
+```text
+       [Netlist File (.cir / .spice)]
+                    │
+                    ▼
+               [ Parser ]  <── Checks syntax, creates data structures
+                    │
+                    ▼
+     [ Modified Nodal Analysis ]
+                    │
+                    ▼
+            [ Matrix Assembly ]
+                    │
+       ┌────────────┼────────────┐
+       ▼            ▼            ▼
+    [Direct]   [Iterative]  [Sparse] <── Solvers
+       │            │            │
+       └────────────┼────────────┘
+                    ▼
+          [ Transient Analysis ] <── Time Integration (TR/BE)
+                    │
+                    ▼
+             [ Output Files ]
