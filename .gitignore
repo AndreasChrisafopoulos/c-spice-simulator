@@ -1,11 +1,9 @@
-# Object files
-build/*.o
-*.o
+# Directories
+build/
+OUT/
 
-# Output files
-OUT/**/*.txt
-OUT/**/*.png
-OUT/**/*.plt
+# Object files
+*.o
 
 # Executables
 *.exe

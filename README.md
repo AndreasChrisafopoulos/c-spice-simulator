@@ -126,7 +126,7 @@ Every run writes results under `OUT/<netlist_name>_outputfiles0/` (direct solver
 
 ## Validating Results
 
-`cmpr/compare_results.py` compares simulator output against a reference solution and reports mean absolute/relative error and pass rate. See [`cmpr/README.md`](./cmpr/README.txt) for usage. Reference solutions for the IBM power-grid benchmarks are in `IBM_SOLS/`.
+`cmpr/compare_results.py` compares simulator output against a reference solution and reports mean absolute/relative error and pass rate. See [`cmpr/README.md`](./cmpr/README.md) for usage. Reference solutions for the IBM power-grid benchmarks are in `IBM_SOLS/`.
 
 ## Repository Layout
 
@@ -149,3 +149,6 @@ Every run writes results under `OUT/<netlist_name>_outputfiles0/` (direct solver
 - PWL sources support up to 20 (time, value) pairs.
 
 Full details in [`NETLIST.md`](./NETLIST.md).
+
+
+*Developed as a university project, October 2025 – January 2026.*
