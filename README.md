@@ -263,11 +263,14 @@ Required build dependencies:
 - GNU Scientific Library
 - OpenBLAS
 - standard C math library
+- Git LFS for the large IBM benchmark and reference files
 
 On Ubuntu or Debian:
 
 ```bash
-sudo apt-get install libgsl-dev libopenblas-dev
+sudo apt-get install libgsl-dev libopenblas-dev git-lfs
+git lfs install
+git lfs pull
 ```
 
 ## Building
@@ -370,6 +373,25 @@ Reference solutions for the included IBM benchmark circuits are stored under:
 ```text
 IBM_SOLS/
 ```
+
+
+### Validation results
+
+The simulator was rebuilt from a fresh clone on Ubuntu and evaluated against the included IBM reference data.
+
+| Benchmark | Analysis | Circuit scale | Analysis time | Peak memory | Numerical agreement |
+|---|---|---:|---:|---:|---|
+| IBM PG1 | Sparse LU DC operating point | 30,636 nodes, 44,943 MNA unknowns | 0.360 s | 53 MB | MAE 2.77e-7 V, 100% of non-zero reference nodes within 1% |
+| IBM PG2 | Sparse LU DC operating point | 127,236 nodes, 127,565 MNA unknowns | 14.383 s | 338 MB | MAE 4.79e-8 V, 100% of non-zero reference nodes within 1% |
+| IBM PG1T | Sparse transient, trapezoidal | 39,681 nodes, 54,265 MNA unknowns | 8.865 s | 87 MB | MAE 4.27e-6 V across 20,020 reference samples, 100% within 1% |
+
+Analysis time is the simulator-reported interval measured after netlist parsing and includes the enabled numerical analyses and their output generation.
+
+For DC validation, relative-error statistics exclude reference voltages effectively equal to zero, where relative error is not meaningful. Absolute-error statistics include the matched node voltages.
+
+The PG2 benchmark was evaluated in sparse mode by adding `.options sparse` to a temporary local copy of the original benchmark netlist. The original benchmark file in the repository was not modified.
+
+For the PG1T transient comparison, the 20 requested nodes were compared over the 1,001 reference time points from 0 to 10 ns.
 
 These benchmark files and reference solutions are used as validation inputs and are not claimed as original benchmark data created by this project.
 

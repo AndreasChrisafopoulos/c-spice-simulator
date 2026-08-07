@@ -14,3 +14,11 @@ project
 # IDE / Editor
 .vscode/
 .idea/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Local validation logs
+*_run.log
+*_compare.log
