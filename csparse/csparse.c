@@ -1,4 +1,13 @@
-
+/*
+ * CSparse
+ * Copyright (c) 2006 Timothy A. Davis
+ *
+ * Licensed under the GNU Lesser General Public License,
+ * version 2.1 or later.
+ *
+ * See csparse/LICENSE and csparse/COPYING.LESSER.
+ */
+ 
 #include <math.h>
 #include <limits.h>
 #include "csparse.h"

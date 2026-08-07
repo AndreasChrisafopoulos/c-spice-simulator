@@ -1,97 +1,270 @@
 # C SPICE Simulator
 
-*A SPICE-like circuit simulator written from scratch in C — Modified Nodal Analysis, direct and iterative solvers (dense and sparse), DC / DC-sweep / transient analysis, exercised against real IBM power-delivery-network benchmarks.*
+A SPICE-like analog circuit simulator implemented in C using Modified Nodal Analysis, dense and sparse matrix representations, direct and iterative numerical solvers, DC analysis, DC sweep, and transient simulation.
+
+The project combines custom numerical implementations with established numerical libraries. Dense LU and Cholesky solvers can run through either GSL or custom factorization code, iterative CG and BiCG solvers are implemented for dense and sparse matrices, and sparse direct factorization uses CSparse.
 
 ## Overview
 
-This project implements a SPICE-like circuit simulator in C, built around Modified Nodal Analysis (MNA). It parses SPICE-style netlists and solves DC operating point, DC sweep, and transient analyses. Every analysis is available through two parallel numerical paths: a dense path (GSL-backed, and a hand-written from-scratch LU / Cholesky / CG / BiCG implementation) and a sparse path for large circuits. The simulator is exercised against real IBM power-delivery-network benchmark netlists ranging from tens of thousands to several million circuit elements.
+The simulator parses SPICE-style netlists and constructs the corresponding Modified Nodal Analysis system.
+
+It supports:
+
+- DC operating-point analysis
+- DC source sweeps
+- transient simulation
+- dense and sparse matrix representations
+- direct and iterative linear-system solvers
+- configurable solver selection through netlist options
+- transient voltage and current source waveforms
+- comparison against reference solutions for large benchmark circuits
+
+The repository includes IBM power-delivery-network benchmark netlists and corresponding reference data that can be used to exercise the sparse solver path on circuits ranging from tens of thousands to millions of elements.
 
 ## Features
 
-- **Netlist Parsing** — SPICE-like, case-insensitive syntax parser with hash-table-based node/element lookup.
-- **Multiple Analyses** — DC operating point (`.op`), DC sweep (`.dc`, up to 32 sweeps per netlist), and transient analysis (`.tran`).
-- **Dual Numerical Paths** — every solve is available through GNU Scientific Library (GSL) routines *and* a from-scratch implementation (LU with partial pivoting, Cholesky, hand-written forward/backward substitution), selectable with `.options custom`.
-- **Iterative Solvers** — Jacobi-preconditioned Conjugate Gradient (CG, for SPD systems) and BiConjugate Gradient (BiCG), hand-implemented for both dense and sparse matrices.
-- **Sparse Support** — triplet/CSC sparse matrices for large-scale networks (tested up to millions of elements, e.g. the IBM power-grid benchmarks).
-- **Direct vs. Iterative Comparison** — every run writes two parallel output sets so the solver families can be compared directly (see Output Files).
+- **SPICE-style netlist parsing** with case-insensitive element and command handling
+- **Modified Nodal Analysis** matrix construction
+- **DC operating-point analysis**
+- **DC sweep analysis** with support for multiple sweeps in one netlist
+- **Transient analysis** using trapezoidal integration or backward Euler
+- **Dense direct solvers** using GSL or custom LU and Cholesky implementations
+- **Dense iterative solvers** using custom Conjugate Gradient and BiConjugate Gradient algorithms
+- **Sparse matrix support** using triplet and compressed-column representations
+- **Sparse direct solvers** using CSparse LU and Cholesky factorization
+- **Sparse iterative solvers** using custom CG and BiCG implementations
+- **Jacobi preconditioning** for iterative methods
+- **Configurable numerical options** through `.options`
+- **Transient source support** for `EXP`, `SIN`, `PULSE`, and `PWL`
+- **Reference-result comparison** through the included Python validation utility
+- **Large benchmark support** through the included IBM power-grid netlists
 
-## Supported Circuit Elements
+## Supported circuit elements
 
 | Element | Syntax | Status |
 |---|---|---|
-| Resistor | `R<name> <n+> <n-> <value>` | Fully simulated |
-| Capacitor | `C<name> <n+> <n-> <value>` | Fully simulated (transient) |
-| Inductor | `L<name> <n+> <n-> <value>` | Fully simulated |
-| Voltage Source | `V<name> <n+> <n-> <dc> [tran_spec]` | Fully simulated (DC + transient) |
-| Current Source | `I<name> <n+> <n-> <dc> [tran_spec]` | Fully simulated (DC + transient) |
-| Diode | `D<name> <n+> <n-> <model> [area=<v>]` | Parsed only — not yet stamped |
-| MOSFET | `M<name> <d> <g> <s> <b> <model> L=<v> W=<v>` | Parsed only — not yet stamped |
-| BJT | `Q<name> <c> <b> <e> <model> [area=<v>]` | Parsed only — not yet stamped |
+| Resistor | `R<name> <n+> <n-> <value>` | Simulated |
+| Capacitor | `C<name> <n+> <n-> <value>` | Simulated in transient analysis |
+| Inductor | `L<name> <n+> <n-> <value>` | Simulated |
+| Voltage source | `V<name> <n+> <n-> <dc> [tran_spec]` | Simulated in DC and transient analyses |
+| Current source | `I<name> <n+> <n-> <dc> [tran_spec]` | Simulated in DC and transient analyses |
+| Diode | `D<name> <n+> <n-> <model> [area=<v>]` | Parsed but not stamped |
+| MOSFET | `M<name> <d> <g> <s> <b> <model> L=<v> W=<v>` | Parsed but not stamped |
+| BJT | `Q<name> <c> <b> <e> <model> [area=<v>]` | Parsed but not stamped |
 
-Diode, MOSFET, and BJT lines are fully parsed — nodes, model name, and `area`/`L`/`W` are read and stored — but are not yet stamped into the MNA matrix, so they don't currently affect simulation results. `.MODEL` parameters are likewise parsed but not used. Extending the stamping stage with device models is the natural next step; see Known Limitations.
+Diode, MOSFET, and BJT descriptions are parsed and stored, including their nodes and model information, but these devices are not currently stamped into the MNA system and therefore do not affect simulation results.
 
-Transient waveforms available on V/I sources: `EXP`, `SIN`, `PULSE`, `PWL` (up to 20 time/value pairs). Full syntax in [`NETLIST.md`](./NETLIST.md).
+`.MODEL` statements are also parsed but their model parameters are not currently used during simulation.
 
-## Supported Analyses
+Adding nonlinear device models and the corresponding nonlinear solution flow is a natural future extension.
 
-- `.op` — DC operating point
-- `.dc <source> <start> <end> <step>` — DC sweep (up to 32 per netlist)
-- `.tran <time_step> <final_time>` — transient analysis, trapezoidal (default) or backward Euler (`.options method=be`)
-- `.plot` / `.print V(n1) V(n2) ...` — up to 32 plotted nodes, context-sensitive to the preceding `.dc`/`.tran` block
+## Transient sources
 
-## Numerical Methods
+Independent voltage and current sources can use the following transient waveforms:
 
-**Direct**
-- Dense LU (partial pivoting) and Cholesky — via GSL, or a from-scratch implementation with hand-written forward/backward substitution (`.options custom`)
-- Sparse LU and Cholesky — via a compressed-column sparse factorization kernel (`.options sparse`)
+- `EXP`
+- `SIN`
+- `PULSE`
+- `PWL`
 
-**Iterative** (`.options iter`)
-- Conjugate Gradient (CG) for SPD systems (`.options spd`), BiConjugate Gradient (BiCG) otherwise
-- Jacobi (diagonal) preconditioning; converges when the relative residual norm drops below `itol` (default `1e-3`, set with `.options itol=<value>`)
-- Implemented for both dense (GSL BLAS-based) and sparse (CSC-based) matrices
+PWL sources support up to 20 time-value pairs.
 
-## Third-Party Components
+The complete syntax is documented in [`NETLIST.md`](./NETLIST.md).
 
-Two well-known libraries are bundled to keep the simulator dependency-light; neither is implemented by this project:
+## Supported analyses
 
-- **[uthash](https://troydhanson.github.io/uthash/)** by Troy D. Hanson (`include/uthash.h`) — hash table used for node-name lookup during parsing.
-- **CSparse** by Timothy A. Davis (`csparse/`) — sparse LU/Cholesky factorization kernel used by the sparse solver path.
+### DC operating point
 
-Everything else — the netlist parser, MNA stamping, dense/sparse direct and iterative solvers, transient integration, and I/O — is implemented from scratch.
-
-## Project Architecture
-
+```text
+.op
 ```
-       [Netlist File (.cir / .spice)]
-                    │
-                    ▼
-               [ Parser ]  <── Checks syntax, creates data structures
-                    │
-                    ▼
-     [ Modified Nodal Analysis ]
-                    │
-                    ▼
-            [ Matrix Assembly ]
-                    │
-       ┌────────────┼────────────┐
-       ▼            ▼            ▼
-    [Direct]   [Iterative]  [Sparse] <── Solvers
-       │            │            │
-       └────────────┼────────────┘
-                    ▼
-          [ Transient Analysis ] <── Time Integration (TR/BE)
-                    │
-                    ▼
-             [ Output Files ]
+
+Constructs and solves the DC MNA system for the circuit.
+
+### DC sweep
+
+```text
+.dc <source> <start> <end> <step>
 ```
+
+Sweeps an independent source over the requested range and solves the circuit at each point.
+
+Up to 32 DC sweeps can be stored from one netlist.
+
+### Transient analysis
+
+```text
+.tran <time_step> <final_time>
+```
+
+Runs time-domain simulation using:
+
+- trapezoidal integration by default
+- backward Euler with `.options method=be`
+
+### Output selection
+
+```text
+.plot V(n1) V(n2)
+.print V(n1) V(n2)
+```
+
+Up to 32 nodes can be selected for output.
+
+## Numerical methods
+
+The simulator provides several numerical paths so the same MNA formulation can be solved using different algorithms and matrix representations.
+
+### Dense direct solvers
+
+The dense path supports:
+
+- GSL LU factorization
+- GSL Cholesky factorization for suitable SPD systems
+- custom LU factorization with partial pivoting
+- custom Cholesky factorization
+- custom forward substitution
+- custom backward substitution
+
+The custom dense direct path can be selected with:
+
+```text
+.options custom
+```
+
+The custom LU and Cholesky factorization logic is implemented in this project while GSL provides the alternative library-backed implementation.
+
+### Dense iterative solvers
+
+The dense iterative path includes custom implementations of:
+
+- Conjugate Gradient for SPD systems
+- BiConjugate Gradient for general systems
+- Jacobi diagonal preconditioning
+
+Iterative solving is enabled with:
+
+```text
+.options iter
+```
+
+SPD behavior can be selected with:
+
+```text
+.options spd
+```
+
+The convergence tolerance can be configured with:
+
+```text
+.options itol=<value>
+```
+
+The default iterative tolerance is `1e-3`.
+
+GSL and BLAS routines are used for supporting vector and matrix operations in the dense numerical path.
+
+### Sparse direct solvers
+
+Sparse matrices are stored using triplet form during assembly and compressed-column form during solution.
+
+Sparse operation can be enabled with:
+
+```text
+.options sparse
+```
+
+Sparse LU and Cholesky factorization use the bundled **CSparse** implementation.
+
+The project code performs the MNA assembly, sparse-path integration, solver selection, right-hand-side handling, and simulation flow around the CSparse factorization routines.
+
+### Sparse iterative solvers
+
+The sparse iterative path contains project implementations of:
+
+- sparse matrix-vector multiplication
+- sparse transposed matrix-vector multiplication
+- Jacobi preconditioning
+- Conjugate Gradient
+- BiConjugate Gradient
+
+These algorithms operate directly on CSC matrices.
+
+## Solver architecture
+
+```text
+        SPICE-style netlist
+                |
+                v
+             Parser
+                |
+                v
+     Circuit data structures
+                |
+                v
+      Modified Nodal Analysis
+                |
+                v
+          Matrix assembly
+                |
+        +-------+-------+
+        |               |
+        v               v
+      Dense           Sparse
+        |               |
+   +----+----+     +----+----+
+   |         |     |         |
+   v         v     v         v
+ Direct   Iterative Direct  Iterative
+   |         |       |         |
+ GSL /     Custom  CSparse    Custom
+ Custom    CG/BiCG  LU/Chol   CG/BiCG
+   |         |       |         |
+   +---------+-------+---------+
+                |
+                v
+       DC / Sweep / Transient
+                |
+                v
+            Output files
+```
+
+## Third-party components
+
+The simulator uses several external numerical and utility components. These components are not claimed as original implementations of this project.
+
+### GNU Scientific Library
+
+GSL is used for matrix and vector data structures, library-backed dense factorizations, and supporting numerical operations.
+
+### OpenBLAS
+
+OpenBLAS provides optimized BLAS routines used by the numerical implementation.
+
+### uthash
+
+[`include/uthash.h`](include/uthash.h) provides the hash-table implementation used for efficient name-based lookup while parsing circuit nodes and elements.
+
+uthash was developed by Troy D. Hanson and is third-party code.
+
+### CSparse
+
+The [`csparse/`](csparse/) directory contains sparse matrix routines derived from CSparse by Timothy A. Davis.
+
+CSparse provides the sparse LU and Cholesky factorization kernels used by the sparse direct solver path.
+
+The project-specific sparse simulation code around these routines, including MNA assembly, solver integration, iterative methods, and simulation control, is separate from the bundled CSparse implementation.
 
 ## Dependencies
 
-- GCC with C11 support
-- [GSL – GNU Scientific Library](https://www.gnu.org/software/gsl/)
-- [OpenBLAS](https://www.openblas.net/)
+Required build dependencies:
 
-On Ubuntu/Debian:
+- GCC with C11 support
+- GNU Scientific Library
+- OpenBLAS
+- standard C math library
+
+On Ubuntu or Debian:
 
 ```bash
 sudo apt-get install libgsl-dev libopenblas-dev
@@ -99,20 +272,43 @@ sudo apt-get install libgsl-dev libopenblas-dev
 
 ## Building
 
+From the repository root:
+
 ```bash
 make
 ```
 
-Produces the `project` executable, linked against GSL and OpenBLAS (see `Makefile`).
+The Makefile compiles the project source files under `src/` together with the bundled CSparse source.
+
+The resulting executable is:
+
+```text
+project
+```
+
+To remove generated build files:
+
+```bash
+make clean
+```
 
 ## Running
+
+The simulator is executed as:
 
 ```bash
 ./project <part_number> <netlist_file>
 ```
 
-- `part_number` selects the netlist folder: `1` → `Part1_Netlists/`, `3` → `Part3_Netlists/`, `6` → `Part6_Netlists/`
-- `netlist_file` is the file name inside that folder
+The first argument selects the corresponding netlist directory.
+
+Examples include:
+
+```text
+1 -> Part1_Netlists/
+3 -> Part3_Netlists/
+6 -> Part6_Netlists/
+```
 
 Example:
 
@@ -120,35 +316,125 @@ Example:
 ./project 6 ibmpg1t.spice
 ```
 
-## Output Files
+The program constructs the path to the selected netlist, parses the simulation options, assembles the required matrices, runs the requested analyses, and writes the resulting node data to the output directory.
 
-Every run writes results under `OUT/<netlist_name>_outputfiles0/` (direct solver) and `OUT/<netlist_name>_outputfiles1/` (iterative solver, populated when `.options iter` is set) — so the two solver families can be compared directly on the same circuit.
+## Solver selection
 
-## Validating Results
+Solver behavior is controlled by the options contained in each netlist.
 
-`cmpr/compare_results.py` compares simulator output against a reference solution and reports mean absolute/relative error and pass rate. See [`cmpr/README.md`](./cmpr/README.md) for usage. Reference solutions for the IBM power-grid benchmarks are in `IBM_SOLS/`.
+Important options include:
 
-## Repository Layout
+```text
+.options custom
+.options sparse
+.options iter
+.options spd
+.options itol=<value>
+.options method=be
+```
+
+These options allow a circuit to select between dense and sparse representations, direct and iterative methods, custom and GSL-backed dense direct solvers, and the supported transient integration methods.
+
+Different solver configurations can therefore be run on the same circuit for numerical comparison.
+
+## Output files
+
+Simulation results are written under the `OUT/` directory in a subdirectory associated with the input netlist.
+
+The exact output files depend on the analyses and solver options enabled by the netlist.
+
+Results can be inspected directly or compared with reference solutions using the validation utility under `cmpr/`.
+
+## Validation
+
+The repository contains:
+
+```text
+cmpr/compare_results.py
+```
+
+for comparing simulator results against reference data.
+
+The comparison utility reports numerical error statistics such as:
+
+- mean absolute error
+- mean relative error
+- pass rate
+
+Usage information is available in:
+
+[`cmpr/README.md`](./cmpr/README.md)
+
+Reference solutions for the included IBM benchmark circuits are stored under:
+
+```text
+IBM_SOLS/
+```
+
+These benchmark files and reference solutions are used as validation inputs and are not claimed as original benchmark data created by this project.
+
+## Repository layout
 
 | Path | Contents |
 |---|---|
-| `src/`, `include/` | Simulator source — parser, MNA stamping, solvers, transient analysis |
-| `csparse/` | Sparse-matrix factorization library (third-party, see above) |
-| `Part1_Netlists/` | Test netlists covering basic element types and DC analysis |
-| `Part3_Netlists/` | Test netlists for sparse + iterative solvers, including the IBM power-grid DC benchmarks (`ibmpg1`–`ibmpg6`) |
-| `Part6_Netlists/` | Test netlists for transient analysis, including the IBM power-grid transient benchmarks |
-| `IBM_SOLS/` | Reference solutions for the IBM benchmark netlists |
-| `cmpr/` | Output comparison / validation script |
-| `NETLIST.md` | Full netlist syntax specification |
+| `src/` | Simulator implementation |
+| `include/` | Project headers and bundled utility headers |
+| `csparse/` | Bundled third-party sparse matrix routines |
+| `Part1_Netlists/` | Basic circuit and DC-analysis netlists |
+| `Part3_Netlists/` | Sparse and iterative solver test netlists, including IBM power-grid cases |
+| `Part6_Netlists/` | Transient-analysis netlists, including IBM benchmark cases |
+| `IBM_SOLS/` | Reference solutions used for benchmark validation |
+| `cmpr/` | Numerical output comparison tools |
+| `NETLIST.md` | Detailed supported netlist syntax |
+| `Makefile` | Build configuration |
 
-## Known Limitations
+## Implementation scope
 
-- Diode, MOSFET, and BJT elements are parsed but not yet stamped into the MNA system (see Supported Circuit Elements); `.MODEL` parameters are read but not used.
-- Controlled sources (VCVS, VCCS, CCVS, CCCS) are not supported.
-- Maximum netlist line length is 256 characters; node/element/model names up to 32 characters.
-- PWL sources support up to 20 (time, value) pairs.
+The following functionality is implemented by the project code under `src/` and the project-specific headers under `include/`:
 
-Full details in [`NETLIST.md`](./NETLIST.md).
+- SPICE-style parsing and internal circuit representation
+- Modified Nodal Analysis assembly
+- resistor, capacitor, inductor, voltage-source, and current-source handling
+- DC operating-point analysis
+- DC sweep control
+- transient integration flow
+- transient source evaluation
+- custom dense LU factorization
+- custom dense Cholesky factorization
+- custom forward and backward substitution
+- dense CG and BiCG solver logic
+- sparse CG and BiCG solver logic
+- Jacobi preconditioning
+- output generation and analysis control
 
+Third-party numerical and utility components are identified separately in the Third-party components section.
 
-*Developed as a university project, October 2025 – January 2026.*
+## Known limitations
+
+- Diode, MOSFET, and BJT elements are parsed but are not stamped into the MNA system
+- `.MODEL` parameters are parsed but are not used during simulation
+- Controlled sources such as VCVS, VCCS, CCVS, and CCCS are not supported
+- Nonlinear Newton-Raphson iteration is not implemented
+- Maximum netlist line length is 256 characters
+- Node, element, and model names support up to 32 characters
+- PWL sources support up to 20 time-value pairs
+
+Full syntax details are available in [`NETLIST.md`](./NETLIST.md).
+
+## Academic context and provenance
+
+This simulator was developed as a university coursework project between **October 2025 and January 2026**.
+
+The repository contains the simulator implementation together with circuit netlists, benchmark data, validation utilities, and third-party numerical components used during development and evaluation.
+
+The project-specific implementation should be distinguished from the external components and benchmark material identified above. The included IBM benchmark netlists and reference solutions are validation data and are not claimed as original benchmark designs produced by this project.
+
+The repository was later organized into a clearer public structure for portfolio and educational review.
+
+## License and third-party material
+
+A root MIT License is included for the original project code.
+
+Bundled third-party components and external benchmark material remain subject to their respective upstream terms. The root project license does not replace or supersede the licensing terms, copyright notices, or redistribution requirements of third-party files.
+
+Users redistributing the repository should preserve the applicable upstream notices and licensing information for bundled dependencies and benchmark material.
