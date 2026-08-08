@@ -24,8 +24,8 @@ The root project MIT License does not replace or supersede the CSparse license.
 
 ## IBM power-grid benchmark material
 
-Paths: `Part3_Netlists/`, `Part6_Netlists/`, and `IBM_SOLS/`
+IBM power-grid benchmark netlists and reference solutions were used as external validation data.
 
-The IBM power-grid benchmark netlists and reference solutions are external benchmark material used for testing and validation. They are not claimed as original project data and are not covered by the root project MIT License.
+This material is not redistributed with this repository and is not covered by the root project MIT License.
 
-Any redistribution or use of this benchmark material remains subject to the terms of its original source.
+See `IBM_BENCHMARKS.md` for the official benchmark source and reproduction instructions.

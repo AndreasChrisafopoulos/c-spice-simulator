@@ -22,3 +22,8 @@ __pycache__/
 # Local validation logs
 *_run.log
 *_compare.log
+
+# External IBM benchmark material
+Part3_Netlists/ibmpg*.spice
+Part6_Netlists/ibmpg*t.spice
+IBM_SOLS/

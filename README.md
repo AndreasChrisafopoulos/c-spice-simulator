@@ -27,7 +27,7 @@ It supports:
 - transient voltage and current source waveforms
 - comparison against reference solutions for large benchmark circuits
 
-The repository includes IBM power-delivery-network benchmark netlists and corresponding reference data that can be used to exercise the sparse solver path on circuits ranging from tens of thousands to millions of elements.
+IBM power-delivery-network benchmarks were used to validate the sparse solver path on large circuits. The benchmark netlists and reference data are not redistributed in this repository. See [IBM_BENCHMARKS.md](./IBM_BENCHMARKS.md) for the official source and reproduction instructions.
 
 ## Features
 
@@ -45,7 +45,7 @@ The repository includes IBM power-delivery-network benchmark netlists and corres
 - **Configurable numerical options** through `.options`
 - **Transient source support** for `EXP`, `SIN`, `PULSE`, and `PWL`
 - **Reference-result comparison** through the included Python validation utility
-- **Large benchmark support** through the included IBM power-grid netlists
+- **Large benchmark validation** using IBM power-grid benchmarks obtained from the official source
 
 ## Supported circuit elements
 
@@ -271,14 +271,11 @@ Required build dependencies:
 - GNU Scientific Library
 - OpenBLAS
 - standard C math library
-- Git LFS for the large IBM benchmark and reference files
 
 On Ubuntu or Debian:
 
 ```bash
-sudo apt-get install libgsl-dev libopenblas-dev git-lfs
-git lfs install
-git lfs pull
+sudo apt-get install libgsl-dev libopenblas-dev
 ```
 
 ## Building
@@ -324,7 +321,7 @@ Examples include:
 Example:
 
 ```bash
-./project 6 ibmpg1t.spice
+./project 6 part6_simple.cir
 ```
 
 The program constructs the path to the selected netlist, parses the simulation options, assembles the required matrices, runs the requested analyses, and writes the resulting node data to the output directory.
@@ -376,16 +373,13 @@ Usage information is available in:
 
 [`cmpr/README.md`](./cmpr/README.md)
 
-Reference solutions for the included IBM benchmark circuits are stored under:
+IBM benchmark netlists and reference solutions are not redistributed with this repository. See [IBM_BENCHMARKS.md](./IBM_BENCHMARKS.md) for the official source and reproduction instructions.
 
-```text
-IBM_SOLS/
-```
 
 
 ### Validation results
 
-The simulator was rebuilt from a fresh clone on Ubuntu and evaluated against the included IBM reference data.
+The simulator was rebuilt from a fresh clone on Ubuntu and evaluated against IBM reference data obtained from the official benchmark source.
 
 | Benchmark | Analysis | Circuit scale | Analysis time | Peak memory | Numerical agreement |
 |---|---|---:|---:|---:|---|
@@ -401,7 +395,7 @@ The PG2 benchmark was evaluated in sparse mode by adding `.options sparse` to a 
 
 For the PG1T transient comparison, the 20 requested nodes were compared over the 1,001 reference time points from 0 to 10 ns.
 
-These benchmark files and reference solutions are used as validation inputs and are not claimed as original benchmark data created by this project.
+The benchmark netlists and reference solutions used for these measurements are external validation data and are not redistributed in this repository. See [IBM_BENCHMARKS.md](./IBM_BENCHMARKS.md) for reproduction instructions.
 
 ## Repository layout
 
@@ -411,9 +405,9 @@ These benchmark files and reference solutions are used as validation inputs and 
 | `include/` | Project headers and bundled utility headers |
 | `csparse/` | Bundled third-party sparse matrix routines |
 | `Part1_Netlists/` | Basic circuit and DC-analysis netlists |
-| `Part3_Netlists/` | Sparse and iterative solver test netlists, including IBM power-grid cases |
-| `Part6_Netlists/` | Transient-analysis netlists, including IBM benchmark cases |
-| `IBM_SOLS/` | Reference solutions used for benchmark validation |
+| `Part3_Netlists/` | Sparse and iterative solver test netlists |
+| `Part6_Netlists/` | Transient-analysis test netlists |
+| `IBM_BENCHMARKS.md` | IBM benchmark source and validation reproduction instructions |
 | `cmpr/` | Numerical output comparison tools |
 | `NETLIST.md` | Detailed supported netlist syntax |
 | `Makefile` | Build configuration |
@@ -455,9 +449,9 @@ Full syntax details are available in [`NETLIST.md`](./NETLIST.md).
 
 This simulator was developed for **ECE513 - Circuit Simulation Algorithms (Αλγόριθμοι Προσομοίωσης Κυκλωμάτων)** at the **University of Thessaly** between **October 2025 and January 2026**.
 
-The repository contains the simulator implementation together with circuit netlists, benchmark data, validation utilities, and third-party numerical components used during development and evaluation.
+The repository contains the simulator implementation together with circuit netlists, validation utilities, benchmark reproduction instructions, and third-party numerical components used during development and evaluation.
 
-The project-specific implementation should be distinguished from the external components and benchmark material identified above. The included IBM benchmark netlists and reference solutions are validation data and are not claimed as original benchmark designs produced by this project.
+The project-specific implementation should be distinguished from the external components and benchmark material identified above. IBM benchmark netlists and reference solutions used during validation are external material and are not redistributed in this repository.
 
 The repository was later organized into a clearer public structure for portfolio and educational review.
 
@@ -465,6 +459,6 @@ The repository was later organized into a clearer public structure for portfolio
 
 A root MIT License is included for the original project code.
 
-Bundled third-party components and external benchmark material remain subject to their respective upstream terms. The root project license does not replace or supersede the licensing terms, copyright notices, or redistribution requirements of third-party files.
+Bundled third-party components remain subject to their respective upstream terms. External benchmark material used for validation is not redistributed with this repository. The root project license does not replace or supersede third-party licensing terms or copyright notices.
 
-Users redistributing the repository should preserve the applicable upstream notices and licensing information for bundled dependencies and benchmark material.
+Users redistributing the repository should preserve the applicable upstream notices and licensing information for bundled dependencies.
