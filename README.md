@@ -4,6 +4,14 @@ A SPICE-like analog circuit simulator implemented in C using Modified Nodal Anal
 
 The project combines custom numerical implementations with established numerical libraries. Dense LU and Cholesky solvers can run through either GSL or custom factorization code, iterative CG and BiCG solvers are implemented for dense and sparse matrices, and sparse direct factorization uses CSparse.
 
+## Highlights
+
+- Sparse MNA simulation validated on IBM power-grid benchmarks
+- Tested up to 127,236 circuit nodes and 127,565 MNA unknowns
+- 100% of validated non-zero DC reference voltages within 1%
+- 20,020 transient reference samples validated with 100% within 1%
+- Dense and sparse direct and iterative solver implementations
+
 ## Overview
 
 The simulator parses SPICE-style netlists and constructs the corresponding Modified Nodal Analysis system.
@@ -445,7 +453,7 @@ Full syntax details are available in [`NETLIST.md`](./NETLIST.md).
 
 ## Academic context and provenance
 
-This simulator was developed as a university coursework project between **October 2025 and January 2026**.
+This simulator was developed for **ECE513 - Circuit Simulation Algorithms (Αλγόριθμοι Προσομοίωσης Κυκλωμάτων)** at the **University of Thessaly** between **October 2025 and January 2026**.
 
 The repository contains the simulator implementation together with circuit netlists, benchmark data, validation utilities, and third-party numerical components used during development and evaluation.
 
